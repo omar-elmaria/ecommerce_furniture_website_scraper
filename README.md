@@ -55,6 +55,8 @@ After the spider finishes its job, a **JSON file** will appear in your directory
 ![image](https://user-images.githubusercontent.com/98691360/198837742-d4807871-0590-4f89-857c-fecaa9238d40.png)
 _N.B. The picture is truncated to preserve space. Not all fields are shown_
 
+**Important Note:** You will notice that the column ```main_image_url``` is missing some entries, and there is a reason for this. To avoid rendering unnecessary images and tracking scripts that will slow down the requests, ```ScraperAPI``` does not render everything on the page by default. Sometimes, this might include some data that is actually needed. Usually, contacting the customer support team will resolve the issue as they will customize the **JS rendering** and **API settings** for the particular website. I did not bother to do this for simplicity.
+
 # 3. Spider Design
 In this project, I created four spiders, ```home_page_spider```, ```cat_page_spider_std_pagination_logic```, ```cat_page_spider_async_pagination_logic```, and ```prod_page_spider```. The names of the spiders indicate which section of the website they crawl. 
 
