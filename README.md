@@ -16,17 +16,22 @@ The aim of this project was to scrape the **home page**, **category pages**, and
 
 ![image](https://user-images.githubusercontent.com/98691360/198837297-1b757811-a118-4f7f-9295-854de1549c6a.png)
 
-The spider follows a **sequence** when crawling these website sections (Home Page --> Category Page --> Product Page) because one section leads to the other. These are the fields that could be extracted from the listing page:
-- seller_name
-- gig_url
-- seller_level (if it exists)
-- gig_title
-- gig rating (if it exists)
-- number_of_reviews (if it exists)
-- gig_starting_price
+The spider follows a **sequence** when crawling these website sections (Home Page --> Category Page --> Product Page) because one section leads to the other. The information that could be extracted from the scraping process are:
+- product_name
+- product_url
+- category_name
+- category_url
+- supplier_name
+- supplier_url
+- strikethrough_price
+- current_price
+- promised_delivery_time_in_days
+- main_image_url
+- page_rank_of_product
+- last_page_of_category
 
 # 2. Scraping Methodology
-I used the ```scrapy``` framework in Python to crawl this information from the **first ten pages** under the "Data Processing" category. Fiverr is a difficult website to scrape. It employs many **anti-bot mechanism** that block your IP if you try to crawl it using the standard methods. Moreover, it is **Javascript-rendered**, which means that the data you want to crawl is **not** present in the HTML code that can be obtained by a standard ```GET``` request.
+I used the ```scrapy``` framework in Python to crawl this information from **two categories**, **"Tables"** and **"Bedroom"**. Kemitt is a difficult website to scrape. because it employs many **anti-bot mechanism** that block your IP if you try to crawl it using the standard methods. Moreover, it is **Javascript-rendered**, which means that the data you want to crawl is **not** present in the HTML code that can be obtained by a standard ```GET``` request.
 
 To overcome these two challenges, I used ```ScraperAPI```, which is a **proxy solution** for web scraping that is designed to make scraping the web at scale as simple as possible. It does that by removing the hassle of finding **high quality proxies**, **rotating proxy pools**, **detecting bans**, **solving CAPTCHAs**, and **managing geotargeting**, and **rendering Javascript**. With simple API calls, you can get the HTML from any web page you desire and scale your requests as needed.
 
@@ -37,37 +42,26 @@ After you create your account, you should land on a page that looks like this...
 
 ![image](https://user-images.githubusercontent.com/98691360/198832083-12a3bc7e-d8a4-492e-bb61-2f3e93db98ed.png)
 
-Assuming you already cloned the repo via this command ```git clone https://github.com/omar-elmaria/fiverr_scraper.git```, you should create a ```.env``` file and place your API key in it as shown below.
+Assuming you already cloned the repo via this command ```git clone https://github.com/omar-elmaria/ecommerce_furniture_website_scraper.git```, you should create a ```.env``` file and place your API key in it as shown below.
 ```
 SCRAPER_API_KEY={INSERT_API_KEY_WITHOUT_THE_CURLY_BRACES}
 ```
-If you did that, the spiders should run without problems. To fire up a spider, ```cd``` into the folder ```fiverr``` and run the following command in your terminal, replacing the variable {SPIDER_NAME} with the name of the spider you want to run.
+When you do that, the spiders should run without problems. To fire up a spider, ```cd``` into the folder ```furniture_ecomm``` and run the following command in your terminal, replacing the variable {SPIDER_NAME} with the name of the spider you want to run.
 ```
 scrapy crawl SPIDER_NAME
 ```
-After the spider finishes its job, a **JSON file** will appear in your directory showing you the results. It will look something like this.
+After the spider finishes its job, a **JSON file** will appear in your directory showing you the results. Depending on the specific spider you run, it will look something like this.
 
-![image](https://user-images.githubusercontent.com/98691360/198832371-e699944c-ec8c-4dd2-87d9-fcc73309ee0f.png)
+![image](https://user-images.githubusercontent.com/98691360/198837742-d4807871-0590-4f89-857c-fecaa9238d40.png)
 _N.B. The picture is truncated to preserve space. Not all fields are shown_
 
 # 3. Spider Design
-In this project, I created two spiders, ```fiverr_spider_sync``` and ```fiverr_spider_async```. The first one utilizes the standard logic suggested by the scrapy documentation to crawl **paginated websites**. It works by obtaining the **link to the next page** via a **CSS or XPATH selector** and sending a ```scrapy.Request``` with a **callback function** to crawl the next page using the same parsing function used for the first page. This logic is shown below.
-```python
-# def parse(self, response):
-  # ... parsing logic is written here
+In this project, I created four spiders, ```home_page_spider```, ```cat_page_spider_std_pagination_logic```, ```cat_page_spider_async_pagination_logic```, and ```prod_page_spider```. The names of the spiders indicate which section of the website they crawl. 
 
-  # Add pagination logic (synchronous). This is at the end of the parse function after the fields are yielded to a dictionary
-  next_page = response.css("li.pagination-arrows > a::attr(href)").get() # Obtain the link to the next page
-  current_page = response.css("li.page-number.active-page > span::text").get() # Obtain the current page number
-  if next_page is not None and int(current_page) <= 10:
-      yield scrapy.Request( # Send a new scrapy.Request that loops back to the parse function to crawl the same data on the next
-          client.scrapyGet(url = next_page, country_code = "de", render = True),
-          callback = self.parse,
-          dont_filter = True
-      )
-```
+**Why are there two spiders for the category page sectoion?**
+The first one utilizes the standard logic suggested by the scrapy documentation to crawl **paginated websites**. It works by obtaining the **link to the next page** via a **CSS or XPATH selector** and sending a ```scrapy.Request``` with a **callback function** to crawl the next page with the same parsing function used for the first page.
 
-The problem with this logic is that it **kills concurrency** because you need to wait for one page to be rendered and crawled before you can send a request to the next page and crawl it. That's where the second spider ```fiverr_spider_async``` comes in. It sends requests to the 10 pages that I wanted to crawl **asynchronously** and parses the data whenever it receives back a response from the Fiverr server. I recommend you use that spider because it is 5 to 7 times faster than the other one.
+The problem with this logic is that it **kills concurrency** because you need to wait for one page to be rendered and crawled before you can send a request to the next page and crawl it. That's where the second spider ```cat_page_spider_async_pagination_logic``` comes in. It sends requests to **all** the pages that I want to crawl **asynchronously** and parses the data whenever it receives back a response from Kemitt's server. I recommend you use that spider because it is 5 to 7 times faster than the other one.
 
 ## 3.1 Scrapy and ScraperAPI Best Practices
 Whenever you use ```ScraperAPI```, it is recommended that you add these settings to your spider class. You can check how the dictionary below is added to the spider class by looking at one of the spider Py files.
@@ -94,15 +88,29 @@ custom_settings_dict = {
 - autoparse
 - ultra_premium
 
-In this project, I use ```render``` to render the Javascript content of Fiverr, ```country_code``` to send my requests from German IP addresses, and ```premium``` to use high quality proxies that **lower the porbability** of the spider getting blocked and not returning any data.
+In this project, I use ```render``` to render the Javascript content of Kemitt and ```country_code``` to send my requests from German IP addresses.
 
 Whenever you send similar requests to a webpage, which is the case we have with this spider, ```Scrapy``` automatically filters out the duplicate ones, which prevents you from crawling all the data you want. To prevent this behavior, you should set the ```dont_filter``` parameter in the ```scrapy.Request``` method to ```True``` like so...
 ```python
 yield scrapy.Request(
-  client.scrapyGet(url = url, country_code = "de", render = True, premium = True),
+  client.scrapyGet(url = url, country_code = "de", render = True),
   callback = self.parse,
   dont_filter = True
 )
 ```
+
+If you want to send information from one parsing function to the next, you can use the ```meta``` parameter in the ```scrapy.Request``` method. An example is shown below.
+```python
+# Define a function to start the crawling process. This function takes the URLs from cat_page_urls_list
+url = "https://kemitt.com/en-eg/"
+def start_requests(self):
+  yield scrapy.Request(
+    client.scrapyGet(url = url, country_code = "de", render = True),
+    callback = self.parse,
+    dont_filter = True, # This is important so that scrapy does not filter out similar requests. We want all requests to be sent
+    meta = dict(master_url = url) # The meta parameter sends the URL to the parse function and you can access it by typing response.meta["master_url"]
+  )
+```
+
 # 4. Questions?
-If you have any questions or wish to build a scraper for a particular use case, feel free to contact me on [LinkedIn](https://www.linkedin.com/in/omar-elmaria/)
+If you have any questions or wish to build a scraper for a particular use case (e.g., Competitive Intelligence), feel free to contact me on [LinkedIn](https://www.linkedin.com/in/omar-elmaria/)
