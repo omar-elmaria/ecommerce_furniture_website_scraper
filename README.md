@@ -112,5 +112,20 @@ def start_requests(self):
   )
 ```
 
-# 4. Questions?
+If you want to run your spiders as a script and **not** from the terminal, use the code below.
+```python
+from scrapy.crawler import CrawlerProcess
+
+class TestSpider(scrapy.Spider):
+  # Some code goes here...
+
+process = CrawlerProcess() # You can also insert custom settings as a dictionary --> CrawlerProcess(settings={"CONCURRENT_REQUESTS": 5}) 
+process.crawl(TestSpider)
+process.start()
+```
+
+# 4. Output of the Code
+The code produces **three JSON files**, ```home_page.json```, ```cat_page.json```, and ```prod_page.json```. There is also a notebook file called ```combine_jsons.ipynb```, which parses the data in the JSONs and places it in a pandas dataframe.
+
+# 5. Questions?
 If you have any questions or wish to build a scraper for a particular use case (e.g., Competitive Intelligence), feel free to contact me on [LinkedIn](https://www.linkedin.com/in/omar-elmaria/)
