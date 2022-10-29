@@ -16,7 +16,7 @@ The aim of this project was to scrape the **home page**, **category pages**, and
 
 ![image](https://user-images.githubusercontent.com/98691360/198837297-1b757811-a118-4f7f-9295-854de1549c6a.png)
 
-The spider follows a **sequence** when crawling these website sections (Home Page --> Category Page --> Product Page) because one section leads to the other. The information that could be extracted from the scraping process are:
+The spider follows a **sequence** when crawling these website sections (Home Page --> Category Page --> Product Page) because one section leads to the other. The information that could be extracted from the scraping process is as follows:
 - product_name
 - product_url
 - category_name
